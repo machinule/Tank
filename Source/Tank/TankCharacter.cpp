@@ -6,6 +6,7 @@
 #include "GameFramework/InputSettings.h"
 #include "Kismet/HeadMountedDisplayFunctionLibrary.h"
 #include "MotionControllerComponent.h"
+#include "U88Anim.h"
 
 #include "DrawDebugHelpers.h"
 
@@ -62,7 +63,7 @@ void ATankCharacter::SetArty() {
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Objects - %s"), *Itr->GetName());
 		//Yeah it's shitty, I'm aware
-		if (Itr->GetName().Equals("88"))
+		if (Itr->GetName() == "A88")
 		{
 			Arty = *Itr;
 		}
@@ -86,7 +87,7 @@ void ATankCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 	//InputComponent->BindTouch(EInputEvent::IE_Pressed, this, &ATankCharacter::TouchStarted);
 	if (EnableTouchscreenMovement(PlayerInputComponent) == false)
 	{
-		//PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ATankCharacter::OnFire);
+		PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ATankCharacter::OnFire);
 	}
 
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &ATankCharacter::OnResetVR);
@@ -144,9 +145,36 @@ void ATankCharacter::EndTouch(const ETouchIndex::Type FingerIndex, const FVector
 	}
 	if ((FingerIndex == TouchItem.FingerIndex) && (TouchItem.bMoved == false))
 	{
-		//OnFire();
+		OnFire();
 	}
 	TouchItem.bIsPressed = false;
+}
+
+void ATankCharacter::OnFire()
+{
+	FHitResult HitData = Trace();
+	bool HitActor = HitData.GetActor() != NULL;
+
+	if (HitActor) {
+		//Get the name of the bone the collider is attached to
+		FName interactionBone = HitData.GetActor()->GetAttachParentSocketName();
+		AActor* Module = HitData.GetActor()->GetAttachParentActor();
+		if (*HitData.GetActor()->GetAttachParentActor()->GetName() != NULL) {
+			//Check for null
+		}
+
+		//Get the skeletal mesh of the 88
+		if (Arty != NULL) {
+			USkeletalMeshComponent* mesh = CastChecked<USkeletalMeshComponent>(Arty->GetComponentByClass(USkeletalMeshComponent::StaticClass()));
+			U88Anim * Animation = Cast<U88Anim>(mesh->GetAnimInstance());
+			if (interactionBone.ToString() == BREECH_ACTUATOR) {
+				Animation->ToggleBreech();
+			}
+		}
+		else {
+			UE_LOG(LogTemp, Error, TEXT("88 Not Found"));
+		}
+	}
 }
 
 void ATankCharacter::TouchUpdate(const ETouchIndex::Type FingerIndex, const FVector Location)
@@ -206,53 +234,30 @@ void ATankCharacter::Interact(float Value)
 {
 	if (Value != 0.0f)
 	{
-		//Hit contains information about what the raycast hit.
-		FHitResult HitData;
-
-		//The origin of the raycast
-		FVector StartLocation = FirstPersonCameraComponent->GetComponentLocation();
-
-		//The EndLocation of the raycast
-		FVector EndLocation = StartLocation + (FirstPersonCameraComponent->GetForwardVector() * PlayerInteractionDistance);
-
-		//Collision parameters. The following syntax means that we don't want the trace to be complex
-		//This will probably change later
-		FCollisionQueryParams CollisionParameters;
-
-		//Perform the line trace
-		//The ECollisionChannel parameter is used in order to determine what we are looking for when performing the raycast
-		// We use a unique interaction channel set in the Editor under Project Properties -> Collisions
-		check(ECollisionChannel::ECC_InteractChannel);
-		GetWorld()->LineTraceSingleByChannel(HitData, StartLocation, EndLocation, ECollisionChannel::ECC_InteractChannel, CollisionParameters);
-
+		FHitResult HitData = Trace();
 		bool HitActor = HitData.GetActor() != NULL;
-		FColor DebugColor;
+
 		if (HitActor) {
-			UE_LOG(LogTemp, Warning, TEXT("Trace hit - %s"), *HitData.GetActor()->GetName());
 			//Get the name of the bone the collider is attached to
 			FName interactionBone = HitData.GetActor()->GetAttachParentSocketName();
 			AActor* Module = HitData.GetActor()->GetAttachParentActor();
 			if (*HitData.GetActor()->GetAttachParentActor()->GetName() != NULL) {
 				//Check for null
 			}
-			UE_LOG(LogTemp, Warning, TEXT("Parent socket - %s"), *interactionBone.ToString());
-			UE_LOG(LogTemp, Warning, TEXT("Parent actor - %s"), *Module->GetName());
-			DebugColor = FColor::Green;
 
 			//Get the skeletal mesh of the 88
 			if (Arty != NULL) {
 				USkeletalMeshComponent* mesh = CastChecked<USkeletalMeshComponent>(Arty->GetComponentByClass(USkeletalMeshComponent::StaticClass()));
-			}
-			else {
+				U88Anim * Animation = Cast<U88Anim>(mesh->GetAnimInstance());
+				if (interactionBone.ToString() == ELEVATION) {
+					Animation->SetElevation(Value);
+				} else if (interactionBone.ToString() == TRAVERSE) {
+					Animation->SetTraverse(Value);
+				}
+			} else {
 				UE_LOG(LogTemp, Error, TEXT("88 Not Found"));
 			}
 		}
-		else {
-			UE_LOG(LogTemp, Warning, TEXT("Trace hit - Nothing"));
-			DebugColor = FColor::Red;
-		}
-
-		DrawDebugLine(GetWorld(), StartLocation, EndLocation, DebugColor, true, -1, 0, 1.f);
 	}
 }
 
@@ -279,4 +284,28 @@ bool ATankCharacter::EnableTouchscreenMovement(class UInputComponent* PlayerInpu
 		PlayerInputComponent->BindTouch(EInputEvent::IE_Repeat, this, &ATankCharacter::TouchUpdate);
 	}
 	return bResult;
+}
+
+//Helper method for trace
+FHitResult ATankCharacter::Trace() {
+	//Hit contains information about what the raycast hit.
+	FHitResult HitData;
+
+	//The origin of the raycast
+	FVector StartLocation = FirstPersonCameraComponent->GetComponentLocation();
+
+	//The EndLocation of the raycast
+	FVector EndLocation = StartLocation + (FirstPersonCameraComponent->GetForwardVector() * PlayerInteractionDistance);
+
+	//Collision parameters. The following syntax means that we don't want the trace to be complex
+	//This will probably change later
+	FCollisionQueryParams CollisionParameters;
+
+	//Perform the line trace
+	//The ECollisionChannel parameter is used in order to determine what we are looking for when performing the raycast
+	// We use a unique interaction channel set in the Editor under Project Properties -> Collisions
+	check(ECollisionChannel::ECC_InteractChannel);
+	GetWorld()->LineTraceSingleByChannel(HitData, StartLocation, EndLocation, ECollisionChannel::ECC_InteractChannel, CollisionParameters);
+
+	return HitData;
 }

@@ -78,6 +78,9 @@ protected:
 	/** Handles stafing movement, left and right */
 	void MoveRight(float Val);
 
+	/** When left mouse is pressed */
+	void OnFire();
+
 	/**
 	 * Called via input to turn at a given rate.
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
@@ -102,7 +105,10 @@ protected:
 	void EndTouch(const ETouchIndex::Type FingerIndex, const FVector Location);
 	void TouchUpdate(const ETouchIndex::Type FingerIndex, const FVector Location);
 	TouchData	TouchItem;
-	
+
+	//Helper method for trace
+	FHitResult Trace();
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
