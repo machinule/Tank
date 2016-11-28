@@ -12,6 +12,7 @@
 #define ELEVATION "Elevating-HandwheelSocket"
 #define TRAVERSE "Traversing-HandwheelSocket"
 #define BREECH_ACTUATOR "Actuating-CylinderSocket"
+#define FIRING_HANDLE "Firing-HandleSocket"
 
 // Movement Factors and Maxes
 #define ELEVATION_FACTOR 0.25
@@ -20,5 +21,10 @@
 #define ELEVATION_MAX 85/ELEVATION_FACTOR
 #define ELEVATION_MIN -8/TRAVERSE_FACTOR
 #define BREECH_TRANSLATE -2.0f
+#define FIRING_HANDLE_ANGLE 10.0f
+#define FIRING_SWITCH_ANGLE 8.0f
+
+#define BREECH_FRAMES 10.0F
+#define FIRING_FRAMES 10.0F
 
 #endif

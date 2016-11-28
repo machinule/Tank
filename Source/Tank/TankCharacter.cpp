@@ -63,7 +63,7 @@ void ATankCharacter::SetArty() {
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Objects - %s"), *Itr->GetName());
 		//Yeah it's shitty, I'm aware
-		if (Itr->GetName() == "A88")
+		if (Itr->GetName() == "Flak88")
 		{
 			Arty = *Itr;
 		}
@@ -111,13 +111,6 @@ void ATankCharacter::Tick(float DeltaTime)
 {
 	//After ever tick
 	Super::Tick(DeltaTime);
-
-	// try and play the sound if specified
-	if (FireSound != NULL)
-	{
-		//Annoying fire sound that I commented out to save my sanity
-		//UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
-	}
 }
 
 void ATankCharacter::OnResetVR()
@@ -152,6 +145,13 @@ void ATankCharacter::EndTouch(const ETouchIndex::Type FingerIndex, const FVector
 
 void ATankCharacter::OnFire()
 {
+	// try and play the sound if specified
+	if (FireSound != NULL)
+	{
+		//Annoying fire sound that I commented out to save my sanity
+		//UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+	}
+
 	FHitResult HitData = Trace();
 	bool HitActor = HitData.GetActor() != NULL;
 
@@ -169,6 +169,9 @@ void ATankCharacter::OnFire()
 			U88Anim * Animation = Cast<U88Anim>(mesh->GetAnimInstance());
 			if (interactionBone.ToString() == BREECH_ACTUATOR) {
 				Animation->ToggleBreech();
+			}
+			if (interactionBone.ToString() == FIRING_HANDLE) {
+				Animation->FireHandle();
 			}
 		}
 		else {
@@ -244,18 +247,23 @@ void ATankCharacter::Interact(float Value)
 			if (*HitData.GetActor()->GetAttachParentActor()->GetName() != NULL) {
 				//Check for null
 			}
-
 			//Get the skeletal mesh of the 88
 			if (Arty != NULL) {
 				USkeletalMeshComponent* mesh = CastChecked<USkeletalMeshComponent>(Arty->GetComponentByClass(USkeletalMeshComponent::StaticClass()));
 				U88Anim * Animation = Cast<U88Anim>(mesh->GetAnimInstance());
-				if (interactionBone.ToString() == ELEVATION) {
-					Animation->SetElevation(Value);
-				} else if (interactionBone.ToString() == TRAVERSE) {
-					Animation->SetTraverse(Value);
+				if (Animation != NULL) {
+					if (interactionBone.ToString() == ELEVATION) {
+						Animation->SetElevation(Value);
+					}
+					else if (interactionBone.ToString() == TRAVERSE) {
+						Animation->SetTraverse(Value);
+					}
+				}
+				else {
+					UE_LOG(LogTemp, Error, TEXT("Animation class not found - check Editor settings"));
 				}
 			} else {
-				UE_LOG(LogTemp, Error, TEXT("88 Not Found"));
+				UE_LOG(LogTemp, Error, TEXT("88 Not Found - check C++ Object Iterator"));
 			}
 		}
 	}
