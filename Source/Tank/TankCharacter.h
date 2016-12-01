@@ -59,6 +59,18 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Gameplay)
 	AActor* Arty;
 
+	/** Sends information about grab trace to blueprint */
+	UFUNCTION(BlueprintCallable, Category = Gameplay, BlueprintImplementableEvent)
+	void GrabTrace(FHitResult hit);
+
+	/** Drop object currently being grabbed */
+	UFUNCTION(BlueprintCallable, Category = Gameplay, BlueprintImplementableEvent)
+	void DropGrabbable();
+
+	/** Bool to indicate that character is holding an object - SET BY BLUEPRINT */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
+	bool IsGrabbing;
+
 protected:
 	/** TEMP - Set the artillery piece*/
 	void SetArty();
@@ -80,6 +92,9 @@ protected:
 
 	/** When left mouse is pressed */
 	void OnFire();
+
+	/** When grab key is pressed */
+	void OnGrab();
 
 	/**
 	 * Called via input to turn at a given rate.
@@ -107,7 +122,7 @@ protected:
 	TouchData	TouchItem;
 
 	//Helper method for trace
-	FHitResult Trace();
+	FHitResult Trace(ECollisionChannel Channel);
 
 protected:
 	// APawn interface

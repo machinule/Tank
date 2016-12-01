@@ -49,6 +49,8 @@ ATankCharacter::ATankCharacter()
 
 	// Uncomment the following line to turn motion controllers on by default:
 	//bUsingMotionControllers = true;
+
+	IsGrabbing = false;
 }
 
 void ATankCharacter::BeginPlay()
@@ -89,6 +91,8 @@ void ATankCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 	{
 		PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ATankCharacter::OnFire);
 	}
+
+	PlayerInputComponent->BindAction("Grab", IE_Pressed, this, &ATankCharacter::OnGrab);
 
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &ATankCharacter::OnResetVR);
 
@@ -152,7 +156,7 @@ void ATankCharacter::OnFire()
 		//UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
 	}
 
-	FHitResult HitData = Trace();
+	FHitResult HitData = Trace(ECollisionChannel::ECC_InteractChannel);
 	bool HitActor = HitData.GetActor() != NULL;
 
 	if (HitActor) {
@@ -177,6 +181,22 @@ void ATankCharacter::OnFire()
 		else {
 			UE_LOG(LogTemp, Error, TEXT("88 Not Found"));
 		}
+	}
+}
+
+void ATankCharacter::OnGrab()
+{
+	if (!IsGrabbing)
+	{
+		FHitResult GrabResult = Trace(ECollisionChannel::ECC_GrabbableChannel);
+		if (GrabResult.GetActor() != NULL)
+		{
+			GrabTrace(GrabResult);
+		}
+	}
+	else
+	{
+		DropGrabbable();
 	}
 }
 
@@ -237,7 +257,7 @@ void ATankCharacter::Interact(float Value)
 {
 	if (Value != 0.0f)
 	{
-		FHitResult HitData = Trace();
+		FHitResult HitData = Trace(ECollisionChannel::ECC_InteractChannel);
 		bool HitActor = HitData.GetActor() != NULL;
 
 		if (HitActor) {
@@ -295,7 +315,7 @@ bool ATankCharacter::EnableTouchscreenMovement(class UInputComponent* PlayerInpu
 }
 
 //Helper method for trace
-FHitResult ATankCharacter::Trace() {
+FHitResult ATankCharacter::Trace(ECollisionChannel Channel) {
 	//Hit contains information about what the raycast hit.
 	FHitResult HitData;
 
@@ -313,7 +333,7 @@ FHitResult ATankCharacter::Trace() {
 	//The ECollisionChannel parameter is used in order to determine what we are looking for when performing the raycast
 	// We use a unique interaction channel set in the Editor under Project Properties -> Collisions
 	check(ECollisionChannel::ECC_InteractChannel);
-	GetWorld()->LineTraceSingleByChannel(HitData, StartLocation, EndLocation, ECollisionChannel::ECC_InteractChannel, CollisionParameters);
+	GetWorld()->LineTraceSingleByChannel(HitData, StartLocation, EndLocation, Channel, CollisionParameters);
 
 	return HitData;
 }

@@ -7,6 +7,7 @@
 
 // Trace channel
 #define ECC_InteractChannel ECC_GameTraceChannel2
+#define ECC_GrabbableChannel ECC_GameTraceChannel3
 
 // Interactive Modules
 #define ELEVATION "Elevating-HandwheelSocket"
