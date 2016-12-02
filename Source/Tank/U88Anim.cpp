@@ -3,6 +3,7 @@
 #include "Tank.h"
 #include "TickingFloat.h"
 #include "U88Anim.h"
+#include "Flak88.h"
 
 // Sets default values
 U88Anim::U88Anim(const FObjectInitializer& ObjectInitializer)
@@ -17,13 +18,24 @@ U88Anim::U88Anim(const FObjectInitializer& ObjectInitializer)
 	BreechTranslateTicking = new TickingFloat(BREECH_TRANSLATE, BREECH_TRANSLATE, BREECH_TRANSLATE/BREECH_FRAMES);
 	BreechTranslate = BREECH_TRANSLATE;
 
-	BreechActuatorTicking = new TickingFloat(90, 90, 90/BREECH_FRAMES);
-	BreechActuator = 90;
+	BreechActuatorTicking = new TickingFloat(0, 0, 90/BREECH_FRAMES);
+	BreechActuator = 0;
 
 	FiringHandleTicking = new TickingFloat(0, 0, FIRING_HANDLE_ANGLE/FIRING_FRAMES);
 	FiringSwitchTicking = new TickingFloat(0, 0, FIRING_SWITCH_ANGLE/FIRING_FRAMES);
 
-	IsBreechOpen = true;
+	RecoilAngleTicking= new TickingFloat(0, 0, 1);
+	RecoilTranslateTicking = new TickingFloat(0, 0, 1);
+
+	IsBreechClosed = true;
+
+	Recoil = 0.0f;
+}
+
+// Sets parent gun 
+void U88Anim::SetParent(AFlak88* Parent)
+{
+	this->Parent = Parent;
 }
 
 void U88Anim::SetTraverse(float Value) {
@@ -31,20 +43,20 @@ void U88Anim::SetTraverse(float Value) {
 }
 
 void U88Anim::SetElevation(float Value) {
-	float result = this->Elevation + Value;
+	float result = this->ElevationRaw + Value;
 	if (result > ELEVATION_MAX) {
-		this->Elevation = ELEVATION_MAX;
+		this->ElevationRaw = ELEVATION_MAX;
 		return;
 	}
 	if (result < ELEVATION_MIN) {
-		this->Elevation = ELEVATION_MIN;
+		this->ElevationRaw = ELEVATION_MIN;
 		return;
 	}
-	this->Elevation = result;
+	this->ElevationRaw = result;
 }
 
 void U88Anim::ToggleBreech() {
-	if (IsBreechOpen)
+	if (IsBreechClosed)
 	{
 		SetBreech(false);
 	}
@@ -58,16 +70,16 @@ void U88Anim::SetBreech(bool State) {
 	if (State)
 	{
 		BreechTranslateTicking->SetTarget(BREECH_TRANSLATE);
-		BreechActuatorTicking->SetTarget(90);
-		UE_LOG(LogTemp, Warning, TEXT("Opening breech"));
+		BreechActuatorTicking->SetTarget(0);
+		UE_LOG(LogTemp, Warning, TEXT("Closing breech"));
 	}
 	else
 	{
 		BreechTranslateTicking->SetTarget(0);
-		BreechActuatorTicking->SetTarget(0);
-		UE_LOG(LogTemp, Warning, TEXT("Closing breech"));
+		BreechActuatorTicking->SetTarget(90);
+		UE_LOG(LogTemp, Warning, TEXT("Opening breech"));
 	}
-		IsBreechOpen = State;
+	IsBreechClosed = State;
 }
 
 void U88Anim::Tick(float DeltaTime)
@@ -79,6 +91,14 @@ void U88Anim::Tick(float DeltaTime)
 		BreechActuator = BreechActuatorTicking->GetCurrent();
 	}
 
+	if (RecoilTranslateTicking != NULL) {
+		Recoil = RecoilTranslateTicking->GetCurrent();
+	}
+	if (RecoilAngleTicking != NULL)
+	{
+		Elevation = ElevationRaw + RecoilAngleTicking->GetCurrent();
+	}
+
 	if (FiringHandleTicking != NULL) {
 		FiringHandle = FiringHandleTicking->GetCurrent();
 	}
@@ -86,18 +106,48 @@ void U88Anim::Tick(float DeltaTime)
 		FiringSwitch = FiringSwitchTicking->GetCurrent();
 	}
 
-	if (FiringHandleTicking != NULL && FiringSwitchTicking != NULL) {
+	if (FiringHandleTicking != NULL && FiringSwitchTicking != NULL)
+	{
 		if (!FiringHandleTicking->IsActive() && !FiringSwitchTicking->IsActive() &&
-			FiringHandle == FIRING_HANDLE_ANGLE && FiringSwitch == FIRING_SWITCH_ANGLE) {
+			FiringHandle == FIRING_HANDLE_ANGLE && FiringSwitch == FIRING_SWITCH_ANGLE)
+		{
 			FiringHandleTicking->SetTarget(0);
 			FiringSwitchTicking->SetTarget(0);
 		}
 	}
+
+	if (RecoilTranslateTicking != NULL && RecoilAngleTicking != NULL)
+	{
+		if (!RecoilTranslateTicking->IsActive() && !RecoilAngleTicking->IsActive() &&
+			RecoilTranslateTicking->GetCurrent() == RECOIL_TRANSLATE &&
+			RecoilAngleTicking->GetCurrent() == RECOIL_ANGLE)
+		{
+			RecoilTranslateTicking->SetInterval(RECOIL_TRANSLATE/RECOIL_RECOVER_FRAMES);
+			RecoilAngleTicking->SetInterval(RECOIL_ANGLE/RECOIL_RECOVER_FRAMES);
+			RecoilTranslateTicking->SetTarget(0);
+			RecoilAngleTicking->SetTarget(0);
+		}
+	}
 }
 
-void U88Anim::FireHandle() {
+void U88Anim::FireHandle()
+{
 	FiringHandleTicking->SetTarget(FIRING_HANDLE_ANGLE);
 	FiringSwitchTicking->SetTarget(FIRING_SWITCH_ANGLE);
+	if (Parent->IsLoaded)
+	{
+		Fire();
+	}
+}
+
+void U88Anim::Fire()
+{
+	Parent->IsLoaded = false;
+	this->ToggleBreech();
+	RecoilTranslateTicking->SetInterval(RECOIL_TRANSLATE/RECOIL_FRAMES);
+	RecoilAngleTicking->SetInterval(RECOIL_ANGLE/RECOIL_FRAMES);
+	RecoilTranslateTicking->SetTarget(RECOIL_TRANSLATE);
+	RecoilAngleTicking->SetTarget(RECOIL_ANGLE);
 }
 
 /*

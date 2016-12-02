@@ -13,6 +13,7 @@ public:
 
 	float GetCurrent();
 	void SetTarget(float Value);
+	void SetInterval(float Value);
 
 	bool IsActive();
 

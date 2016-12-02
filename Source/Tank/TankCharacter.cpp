@@ -7,6 +7,7 @@
 #include "Kismet/HeadMountedDisplayFunctionLibrary.h"
 #include "MotionControllerComponent.h"
 #include "U88Anim.h"
+#include "Shell.h"
 
 #include "DrawDebugHelpers.h"
 
@@ -57,22 +58,6 @@ void ATankCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
-	SetArty();
-}
-
-void ATankCharacter::SetArty() {
-	for (TObjectIterator<AActor> Itr; Itr; ++Itr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Objects - %s"), *Itr->GetName());
-		//Yeah it's shitty, I'm aware
-		if (Itr->GetName() == "Flak88")
-		{
-			Arty = *Itr;
-		}
-	}
-	if (Arty == NULL) {
-		UE_LOG(LogTemp, Error, TEXT("88 Not Found"));
-	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -162,10 +147,7 @@ void ATankCharacter::OnFire()
 	if (HitActor) {
 		//Get the name of the bone the collider is attached to
 		FName interactionBone = HitData.GetActor()->GetAttachParentSocketName();
-		AActor* Module = HitData.GetActor()->GetAttachParentActor();
-		if (*HitData.GetActor()->GetAttachParentActor()->GetName() != NULL) {
-			//Check for null
-		}
+		AActor* Arty = HitData.GetActor()->GetAttachParentActor();
 
 		//Get the skeletal mesh of the 88
 		if (Arty != NULL) {
@@ -197,6 +179,7 @@ void ATankCharacter::OnGrab()
 	else
 	{
 		DropGrabbable();
+		ClearGrabbed();
 	}
 }
 
@@ -235,6 +218,11 @@ void ATankCharacter::TouchUpdate(const ETouchIndex::Type FingerIndex, const FVec
 	}
 }
 
+void ATankCharacter::ClearGrabbed()
+{
+	Grabbed = NULL;
+}
+
 void ATankCharacter::MoveForward(float Value)
 {
 	if (Value != 0.0f)
@@ -263,10 +251,8 @@ void ATankCharacter::Interact(float Value)
 		if (HitActor) {
 			//Get the name of the bone the collider is attached to
 			FName interactionBone = HitData.GetActor()->GetAttachParentSocketName();
-			AActor* Module = HitData.GetActor()->GetAttachParentActor();
-			if (*HitData.GetActor()->GetAttachParentActor()->GetName() != NULL) {
-				//Check for null
-			}
+			AActor* Arty = HitData.GetActor()->GetAttachParentActor();
+
 			//Get the skeletal mesh of the 88
 			if (Arty != NULL) {
 				USkeletalMeshComponent* mesh = CastChecked<USkeletalMeshComponent>(Arty->GetComponentByClass(USkeletalMeshComponent::StaticClass()));

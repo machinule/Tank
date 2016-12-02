@@ -39,6 +39,10 @@ void TickingFloat::SetTarget(float Value) {
 	this->Target = Value;
 }
 
+void TickingFloat::SetInterval(float Value) {
+	this->Interval = Value;
+}
+
 float TickingFloat::GetCurrent() {
 	return Current;
 }

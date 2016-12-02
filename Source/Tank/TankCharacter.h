@@ -55,26 +55,23 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Gameplay)
 	float PlayerInteractionDistance;
 
-	/** TEMP - The artillery piece */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Gameplay)
-	AActor* Arty;
+	/** The object currently being grabbed */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Grabbing)
+	AActor* Grabbed;
 
 	/** Sends information about grab trace to blueprint */
-	UFUNCTION(BlueprintCallable, Category = Gameplay, BlueprintImplementableEvent)
+	UFUNCTION(BlueprintCallable, Category = Grabbing, BlueprintImplementableEvent)
 	void GrabTrace(FHitResult hit);
 
 	/** Drop object currently being grabbed */
-	UFUNCTION(BlueprintCallable, Category = Gameplay, BlueprintImplementableEvent)
+	UFUNCTION(BlueprintCallable, Category = Grabbing, BlueprintImplementableEvent)
 	void DropGrabbable();
 
 	/** Bool to indicate that character is holding an object - SET BY BLUEPRINT */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Grabbing)
 	bool IsGrabbing;
 
 protected:
-	/** TEMP - Set the artillery piece*/
-	void SetArty();
-
 	/** Trace from the character every tick. */
 	void Tick(float DeltaTime);
 
@@ -95,6 +92,9 @@ protected:
 
 	/** When grab key is pressed */
 	void OnGrab();
+
+	/** Clear grabbed */
+	void ClearGrabbed();
 
 	/**
 	 * Called via input to turn at a given rate.
