@@ -46,6 +46,7 @@ void AFlak88::LoadShell(AActor* Shell)
 	Shell->DisableComponentsSimulatePhysics();
 	Shell->AttachRootComponentToActor(this, "LoadingSocket", EAttachLocation::SnapToTarget);
 	((AShell*)Shell)->LoadAnim();
+	LoadedShell = Shell;
 	IsLoaded = true;
 }
 
@@ -61,3 +62,8 @@ bool AFlak88::ReadyToLoad()
 	return !(AnimInstance->IsBreechClosed);
 }
 
+// Destroy the current shell actor on fire
+void AFlak88::DestroyLoaded()
+{
+	LoadedShell->Destroy();
+}

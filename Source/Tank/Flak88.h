@@ -28,17 +28,28 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Charging)
 		void LoadShell(AActor* Shell);
 
-	// If the gun can be loaded
+	// Toggle the breech
 	UFUNCTION(BlueprintCallable, Category = Charging)
 		void ToggleBreech();
 
+	// Play the sound of the breech
+	UFUNCTION(BlueprintImplementableEvent, Category = Charging)
+		void BreechNoise();
+
 	// If the gun can be loaded
-	UFUNCTION(BlueprintCallable, BlueprintCallable, Category = Charging)
+	UFUNCTION(BlueprintCallable, Category = Charging)
 		bool ReadyToLoad();
+
+	// Fire the gun, spawn the canister and shell
+	UFUNCTION(BlueprintImplementableEvent, Category = Firing)
+		void FireShell();
 
 	AActor* LoadingCollider;
 
 	bool IsLoaded;
+
+	void DestroyLoaded();
+	AActor* LoadedShell;
 
 protected:
 	// Animation instance

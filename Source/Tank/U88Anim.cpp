@@ -79,6 +79,7 @@ void U88Anim::SetBreech(bool State) {
 		BreechActuatorTicking->SetTarget(90);
 		UE_LOG(LogTemp, Warning, TEXT("Opening breech"));
 	}
+	Parent->BreechNoise();
 	IsBreechClosed = State;
 }
 
@@ -142,12 +143,17 @@ void U88Anim::FireHandle()
 
 void U88Anim::Fire()
 {
-	Parent->IsLoaded = false;
-	this->ToggleBreech();
-	RecoilTranslateTicking->SetInterval(RECOIL_TRANSLATE/RECOIL_FRAMES);
-	RecoilAngleTicking->SetInterval(RECOIL_ANGLE/RECOIL_FRAMES);
-	RecoilTranslateTicking->SetTarget(RECOIL_TRANSLATE);
-	RecoilAngleTicking->SetTarget(RECOIL_ANGLE);
+	if (IsBreechClosed)
+	{
+		Parent->IsLoaded = false;
+		this->ToggleBreech();
+		RecoilTranslateTicking->SetInterval(RECOIL_TRANSLATE / RECOIL_FRAMES);
+		RecoilAngleTicking->SetInterval(RECOIL_ANGLE / RECOIL_FRAMES);
+		RecoilTranslateTicking->SetTarget(RECOIL_TRANSLATE);
+		RecoilAngleTicking->SetTarget(RECOIL_ANGLE);
+		Parent->DestroyLoaded();
+		Parent->FireShell();
+	}
 }
 
 /*
