@@ -19,7 +19,10 @@ DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 ATankCharacter::ATankCharacter()
 {
 	// Set size for collision capsule
-	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
+	GetCapsuleComponent()->InitCapsuleSize(15.f, 96.0f);
+
+	GetCharacterMovement()->Mass = 1000.0f;
+	GetCharacterMovement()->bScalePushForceToVelocity = true;
 
 	// set our turn rates for input
 	BaseTurnRate = 45.f;
